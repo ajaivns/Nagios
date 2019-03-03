@@ -1,0 +1,95 @@
+Nagios Installation and configuration 
+Introduction :
+Nagios, now known as Nagios Core, is a free and open source computer-software application that monitors systems, networks and infrastructure. Nagios offers monitoring and alerting services for servers, switches, applications and services
+Preriquirement :
+#yum install httpd php gcc compiler,glibc, glibc-common and gd development library
+Create user, group and add in group for nagios :
+#useradd nagios
+#groupadd nagcmd
+# usermod –a –G nagcmd nagios
+# usermod –a –G nagcmd apache
+“Added apache and nagios in nagcmd group when we execute command from GUI”
+Download Nagios core :
+# wget https://www.nagios.org/downloads/nagios-core/
+Install Nagios core:
+# tar xvzf nagios-4.3.4.tar.gz
+# cd nagios-4.3.4/
+# ./configure --with-command-group=nagcmd
+Compile the Nagios files :
+# make all
+Install binaries, init script, sample config file and set permissions on the external command :
+# make install-init
+# make install-commandmode
+# make install-config
+Install Nagios webconf :
+# make install-webconf
+Create user and password for nagios GUI access :
+# htpasswd  /usr/local/nagios/etc/htpasswd.users testuser
+Note : Create multiple account and password for gui access with above command.
+Delete user and password from Nagios GUI  :
+htpasswd -D /usr/local/nagios/etc/htpasswd.users testuser
+Start Nagios service and set on startup :
+# /etc/init.d/nagios restart
+# chkconfig nagios on
+Note : 
+1 :  If selinux enable then do below also if iptable set on your system allow port 5666 for nagios.
+# chcon -R -t httpd_sys_content_t /usr/local/nagios/sbin/
+# chcon -R -t httpd_sys_content_t /usr/local/nagios/share/ 
+# iptable –A add –s 192.168.2.0/24 
+2 : If you want read only or full permissions for Nagios users, Do below :
+# vim /usr/local/etc/cgi.cfg   << Add below in the file and  >>
+authorized_for_all_services=*		<< For all service access >>
+authorized_for_all_hosts=*		<< For all host access >>
+authorized_for_read_only=user1,user2	<< For read only users >>
+
+Note : you can use anyone  Nagios Plugin or NRPE as a client for Nagios server.
+Install Preriquirement :
+# yum install -y gcc glibc glibc-common gd gd-devel make net-snmp openssl-devel xinetd
+Download Nagios Plugin : 
+#cd /opt/
+#wget https://www.nagios.org/downloads/nagios-plugins/ 
+Install Nagios Plug-ins : 
+# useradd nagios
+# tar xvzf nagios-plugin-2.2.1.tar.gz
+# cd nagios-plugins-2.2.1
+# ./configure 
+Make binery file and install :
+# make 
+# make all
+# make install
+Now verify Nagios configuration :
+# /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
+Out put should be like –
+Total Warnings: 0
+Total Errors:   0
+Things look okay - No serious problems were detected during the pre-flight check
+Note : set check as per your requirement in file.
+ like - /usr/local/nagios/etc/object/command.cfg and more
+
+Download NRPE :
+#cd /opt/
+# wget http://kent.dl.sourceforge.net/project/nagios/nrpe-3.x/nrpe-3.2.1/ 
+Extrate the NRPE :
+# tar xvzf nrpe-3.2.1.tar.gz
+# cd nrpe-3.2.1
+Configure NRPE :
+#./configure
+Compile binery file and install :
+#make all
+Install NRPE plug-in, daemon and sample config file :
+# make install-plugin
+# make install-daemon
+# make install-daemon-config
+# make install-xinetd
+# mkdir -p /usr/local/nagios/etc/servers
+Make entry for Nagios run as daemon with xinted server : 
+# vim /etc/services
+nrpe	5666/tcp	NRPE        <<< add below in the file >>>
+Verify Nagios config : 
+# /usr/local/nagios/libexec/check_nrpe -H localhost
+Restart Nagios :
+# /etc/init.d/nagios restart
+Note :  Set-up Nagios server notification mail and alerts.
+# vim /usr/local/nagios/etc/nagios.cfg
+cfg_dir=/usr/local/nagios/etc/servers         <<< uncomment this line >>>
+
